@@ -1,0 +1,72 @@
+docker：
+本项目用到了三个docker
+1、postgresql：主数据库（必选）
+    docker compose -f docker-compose.pg.yml up -d
+2、redis：为expressjs提供session存储（可选）
+    docker compose -f docker-compose.redis.yml up -d
+3、nginx：正式环境中替代rproxy.js作为代理服务器（可选，不可与rproxy同时开启）
+    docker compose -f docker-compose.nginx.yml up -d
+
+
+
+开发环境：
+1、无redis
+    npm run dev
+    npm run rproxy
+2、使用redis
+    npm run dev2
+    npm run rproxy2
+
+
+
+正式环境：（tailwindcss处理）
+npm run build
+
+
+正式环境：(server: single instance, rproxy: single instance)
+pm2 start ecosystem.config.cjs
+pm2 ls
+pm2 stop all
+pm2 delete all
+
+lin@MacBook-Air node2 % pm2 start ecosystem.config.cjs 
+[PM2][WARN] Applications vlab-app, vlab-proxy not running, starting...
+[PM2] App [vlab-app] launched (1 instances)
+[PM2] App [vlab-proxy] launched (1 instances)
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ vlab-app      │ default     │ 1.0.0   │ fork    │ 66942    │ 0s     │ 0    │ online    │ 0%       │ 1.5mb    │ lin      │ disabled │
+│ 1  │ vlab-proxy    │ default     │ 1.0.0   │ fork    │ 66947    │ 0s     │ 0    │ online    │ 0%       │ 1.4mb    │ lin      │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+
+
+
+正式环境：(server: multiple instances, rproxy: single instance)
+pm2 start ecosystem2.config.cjs
+
+lin@MacBook-Air node2 % pm2 start ecosystem2.config.cjs 
+[PM2][WARN] Applications vlab-app-with-redis, vlab-proxy-with-redis not running, starting...
+[PM2] App [vlab-proxy-with-redis] launched (1 instances)
+[PM2] App [vlab-app-with-redis] launched (8 instances)
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46323    │ 0s     │ 0    │ online    │ 23%      │ 70.7mb   │ lin      │ disabled │
+│ 2  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46329    │ 0s     │ 0    │ online    │ 23%      │ 70.5mb   │ lin      │ disabled │
+│ 3  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46330    │ 0s     │ 0    │ online    │ 0%       │ 67.5mb   │ lin      │ disabled │
+│ 4  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46331    │ 0s     │ 0    │ online    │ 0%       │ 63.8mb   │ lin      │ disabled │
+│ 5  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46332    │ 0s     │ 0    │ online    │ 0%       │ 58.1mb   │ lin      │ disabled │
+│ 6  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46333    │ 0s     │ 0    │ online    │ 0%       │ 55.3mb   │ lin      │ disabled │
+│ 7  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46334    │ 0s     │ 0    │ online    │ 0%       │ 44.5mb   │ lin      │ disabled │
+│ 8  │ vlab-app-with-redis      │ default     │ 1.0.0   │ cluster │ 46335    │ 0s     │ 0    │ online    │ 0%       │ 38.3mb   │ lin      │ disabled │
+│ 1  │ vlab-proxy-with-redis    │ default     │ 1.0.0   │ fork    │ 46328    │ 0s     │ 0    │ online    │ 11%      │ 56.5mb   │ lin      │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+
+
+
+正式环境：(server: multiple instances, rproxy: nginx)
+pm2 start ecosystem3.config.cjs
+同时要开启nginx的docker

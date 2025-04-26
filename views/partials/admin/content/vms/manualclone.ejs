@@ -1,0 +1,190 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Manual allocation of virtual machines</h1>
+    <p class="text-sm text-gray-700">Manually clone and assign virtual machines.</p>
+</div>
+
+<form id="assign-form" class="my-4 p-4 bg-white rounded flex flex-col gap-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col pb-4">
+            <label for="group_id" class="block text-sm font-medium text-gray-700">Group</label>
+            <select id="group_id" name="group_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a group</option>
+                <% groups.forEach((group)=> { %>
+                    <option value="<%= group.id %>"><%= group.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex flex-col pb-4">
+            <label for="user_id" class="block text-sm font-medium text-gray-700">User</label>
+            <select id="user_id" name="user_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a user</option>
+            </select>
+        </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="flex flex-col pb-4 col-span-2">
+                <label for="source_vm_id" class="block text-sm font-medium text-gray-700">Virtual machine</label>
+                <select id="source_vm_id" name="source_vm_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                    <option value="">Please select a virtual machine</option>
+                    <% source_vms.forEach(source_vm=> { %>
+                        <option value="<%= source_vm.vm %>"><%= source_vm.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="flex justify-center items-center">
+                <button id="clone_by_vm" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">
+                    Assign by VM
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+            <div class="flex flex-col pb-4 col-span-2">
+                <label for="lab_id" class="block text-sm font-medium text-gray-700">Lab</label>
+                <select id="lab_id" name="lab_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                    <option value="">Please select a lab</option>
+                    <% labs.forEach(lab=> { %>
+                        <option value="<%= lab.id %>"><%= lab.title %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="flex justify-center items-center">
+                <button id="clone_by_lab" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">
+                    Assign by lab
+                </button>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const groupSelect = document.getElementById('group_id');
+    const userSelect = document.getElementById('user_id');
+    const sourceVmSelect = document.getElementById('source_vm_id');
+    const labSelect = document.getElementById('lab_id');
+    const clone_by_vm = document.getElementById('clone_by_vm');
+    const clone_by_lab = document.getElementById('clone_by_lab');
+    const assignForm = document.getElementById('assign-form');
+    
+    // Listen for group selection changes
+    groupSelect.addEventListener('change', async function() {
+        const groupId = this.value;
+        
+        // Reset user selection
+        userSelect.innerHTML = '<option value="">Please select a user</option>';
+        
+        if (!groupId) return;
+        
+        try {
+            // Get the user list of the group
+            const response = await fetch(`/admin/groups/${groupId}`);
+            if (!response.ok) {
+                throw new Error('Failed to get user list');
+            }
+            const users = await response.json();
+            
+            // Fill the user selector
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name || user.username;
+                userSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to get user list:', error);
+            alert('Failed to get user list, please try again later.');
+        }
+    });
+    
+    // Assign by VM
+    clone_by_vm.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const groupId = groupSelect.value;
+        const userId = userSelect.value;
+        const sourceVmId = sourceVmSelect.value;
+        
+        if (!groupId || !userId || !sourceVmId) {
+            alert('Please select a group, user and virtual machine');
+            return;
+        }
+        
+        // Get the name of the selected virtual machine
+        const sourceVmName = sourceVmSelect.options[sourceVmSelect.selectedIndex].text;
+        
+        try {
+            const response = await fetch('/admin/vms/manualclone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    group_id: groupId,
+                    user_id: userId,
+                    source_vm_id: sourceVmId
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                assignForm.reset();
+            } else {
+                alert(`Operation failed: ${result.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Failed to assign virtual machine:', error);
+            alert('Failed to assign virtual machine, please try again later.');
+        }
+    });
+
+    // Assign by lab
+    clone_by_lab.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const groupId = groupSelect.value;
+        const userId = userSelect.value;
+        const labId = labSelect.value;
+        
+        if (!groupId || !userId || !labId) {
+            alert('Please select a group, user and lab');
+            return;
+        }
+        
+        // Get the name of the selected lab
+        const labName = labSelect.options[labSelect.selectedIndex].text;
+        
+        try {
+            const response = await fetch('/admin/vms/manualclone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    group_id: groupId,
+                    user_id: userId,
+                    lab_id: labId
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                assignForm.reset();
+            } else {
+                alert(`Operation failed: ${result.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Failed to assign virtual machine:', error);
+            alert('Failed to assign virtual machine, please try again later.');
+        }
+    });
+});
+</script>

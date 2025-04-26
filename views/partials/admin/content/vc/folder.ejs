@@ -1,0 +1,44 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Resource Overview</h1>
+    <p class="text-sm text-gray-700">vCenter folder resource information.</p>
+</div>
+
+<table class="min-w-full divide-y divide-gray-300">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                No.
+            </th>
+            <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Name
+            </th>
+            <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Folder
+            </th>
+            <th scope="col" class="w-5/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Type
+            </th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 bg-white">
+        <% folders.forEach((folder, index) => { %>
+            <tr>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= index + 1 %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= folder.name %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= folder.folder %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= folder.type %>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>
+
+
+

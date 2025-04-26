@@ -1,0 +1,35 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Resource Overview</h1>
+    <p class="text-sm text-gray-700">vCenter CIS resource information.</p>
+</div>
+
+<table class="min-w-full divide-y divide-gray-300">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                No.
+            </th>
+            <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">Type</th>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">Name</th>
+            <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">category_id</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 bg-white">
+        <% categories.forEach((category, index) => { %>
+            <tr>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= index + 1 %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= category.associable_types %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= category.name %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= category.id %>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

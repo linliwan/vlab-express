@@ -1,0 +1,171 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Create User and Group</h1>
+    <p class="text-sm text-gray-700">Batch create student users, create groups.</p>
+</div>
+
+<form class="flex flex-col justify-between gap-4 mt-4 p-4 bg-white rounded" id="createGroupForm" onsubmit="handleCreateGroup(event)">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+            <label for="name" class="block text-sm font-medium text-gray-700">Group Name</label>
+            <input type="text" id="name" name="name" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="g250101" required>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <input id="description" name="description" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="2025 Grade 1 Department 1 Class" required>
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <button type="submit" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">Create Group (Class)</button>
+    </div>
+</form>
+
+<form class="flex flex-col justify-between gap-4 mt-4 p-4 bg-white rounded" id="createSingleUserForm" onsubmit="handleCreateSingleUser(event)">
+    <div class="grid grid-cols-3 gap-4">
+        <div class="flex flex-col gap-2">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <input type="text" id="username" name="username" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="stu" required>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="group" class="block text-sm font-medium text-gray-700">Group</label>
+            <select id="group" name="group" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                <option>Please select a group</option>
+                <% groups.forEach(group=> { %>
+                    <option value="<%= group.id %>"><%= group.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" id="password" name="password" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Password" required>
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <button type="submit" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">Create Single Student Account</button>
+    </div>
+</form>
+
+
+<form class="flex flex-col justify-between gap-4 mt-4 p-4 bg-white rounded" id="createUsersForm" onsubmit="handleCreateUsers(event)">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username Prefix</label>
+            <input type="text" id="username" name="username" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="stu" required>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="group" class="block text-sm font-medium text-gray-700">Group</label>
+            <select id="group" name="group" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" required>
+                <option>Please select a group</option>
+                <% groups.forEach(group=> { %>
+                    <option value="<%= group.id %>"><%= group.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="password" class="block text-sm font-medium text-gray-700">Default Password</label>
+            <input type="password" id="password" name="password" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Password" required>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="number" class="block text-sm font-medium text-gray-700">Number</label>
+            <input type="number" 
+                   id="number" 
+                   name="number" 
+                   class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" 
+                   placeholder="Enter a number between 1 and 60"
+                   min="1"
+                   max="60"
+                   required
+                   oninput="this.value = this.value > 60 ? 60 : Math.abs(this.value)">
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <button type="submit" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">Batch Create Student Accounts</button>
+    </div>
+</form>
+
+<script>
+async function handleCreateGroup(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch('/admin/groups', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            form.reset();
+            // Refresh the page to update the group list
+            window.location.reload();
+        } else {
+            alert(result.message || 'Failed to create group, please try again');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create group, please try again');
+    }
+}
+
+async function handleCreateUsers(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch('/admin/users/newuser-batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            form.reset();
+        } else {
+            alert(result.message || 'Failed to create user, please try again');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create user, please try again');
+    }
+}
+
+async function handleCreateSingleUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch('/admin/users/newuser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            form.reset();
+        } else {
+            alert(result.message || 'Failed to create user, please try again');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create user, please try again');
+    }
+}
+</script>

@@ -1,0 +1,219 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Virtual Machine Management</h1>
+    <p class="text-sm text-gray-700">Manage virtual machines by group. <span class="text-red-500">Before batch deleting by assignment group, please ensure that all virtual machines are powered off!</span></p>
+</div>
+
+
+<form id="assign-form" class="my-4 p-4 bg-white rounded">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col pb-4">
+            <label for="assignment_id" class="block text-sm font-medium text-gray-700">Query by assignment group</label>
+            <select id="assignment_id" name="assignment_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select laboratory and group</option>
+                <% assignments.forEach((assignment)=> { %>
+                    <option value="<%= assignment.id %>"><%= `${assignment.lab_title} - ${assignment.group_name}` %></option>
+                <% }); %>
+                <option value="0">Manual assignment</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col pb-4">
+            <label for="group_id" class="block text-sm font-medium text-gray-700">Query by vCenter tag</label>
+            <select id="group_id" name="group_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select vCenter tag</option>
+                <% groups.forEach((group)=> { %>
+                    <option value="<%= group.id %>"><%= `${group.name}` %></option>
+                <% }); %>
+            </select>
+        </div>
+    </div>
+</form>
+
+
+
+<% if (assignment_id || group_id) { %>
+    <!-- Batch operation toolbar -->
+    <div class="flex items-end justify-between gap-4 my-4 p-4 bg-red-50 rounded-lg">
+        <div>
+        <% if (assignment_id && assignment_id !== '0') { %>
+            <button onclick="deleteAssignment('<%= assignment_id %>')"
+                class="h-8 px-4 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium cursor-pointer">
+                Delete all by assignment group
+            </button>
+            <% } %>
+        </div>
+        <div>
+            <button onclick="batchPowerOff()"
+                class="h-8 px-4 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium cursor-pointer">
+                Power off all
+            </button>
+        </div>
+    </div>
+<% } %>
+
+
+    <% if ((vms.length > 0) && (assignment_id || group_id)) { %>
+        <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                        No.
+                    </th>
+                    <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">Name</th>
+                    <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">vm-id</th>
+                    <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">User</th>
+                    <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">Operation</th>
+
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                <% vms.forEach((vm, index) => { %>
+                    <tr>
+                        <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                            <%= index + 1 %>
+                        </td>
+                        <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                            <%= vm.name %>
+                        </td>
+                        <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900 vm_id_mark">
+                            <%= vm.vm_id %>
+                        </td>
+                        <td class="whitespace-nowrap p-3 text-sm text-gray-500">
+                            <%= vm.email %>
+                        </td>
+                        <td class="whitespace-nowrap p-3 text-sm text-gray-500">
+                            <div class="flex items-center gap-2" id="vm-status-<%= vm.vm_id %>" 
+                                hx-get="/admin/vmadmin/<%= vm.vm_id %>" 
+                                hx-trigger="load, every 60s"
+                                hx-swap="innerHTML">
+                                <!-- Automatically filled by HTMX -->
+                            </div>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+
+    <% } else { %>
+        <!-- Prompt information when no group is selected -->
+        <div class="mt-10 text-center p-10 bg-white rounded-lg border border-gray-200">
+            <div class="text-gray-500 text-lg mb-2">Please select a filter method first</div>
+            <p class="text-gray-400 text-sm">Please select a group in the drop-down menu above to view the virtual machine list</p>
+        </div>
+    <% } %>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const groupSelect = document.getElementById('group_id');
+        const assignmentSelect = document.getElementById('assignment_id');
+
+        // Listen for changes in the assignment selection
+        assignmentSelect.addEventListener('change', async function() {
+            const assignmentId = this.value;
+            
+            if (!assignmentId) return;
+            
+            try {
+                // Refresh the page, send the filter request with the assignmentId
+                window.location.href = `/admin/vms/clonedvms-group?assignment_id=${assignmentId}`;
+            } catch (error) {
+                console.error(error);
+                alert('Failed to get the list, please try again later.');
+            }
+        });
+
+        // Listen for changes in the group selection
+        groupSelect.addEventListener('change', async function() {
+            const groupId = this.value;
+            
+            if (!groupId) return;
+            
+            try {
+                // Refresh the page, send the filter request with the groupId
+                window.location.href = `/admin/vms/clonedvms-group?group_id=${groupId}`;
+            } catch (error) {
+                console.error(error);
+                alert('Failed to get the list, please try again later.');
+            }
+        });
+    });
+    
+    // 监听虚拟机状态变化事件
+    document.body.addEventListener('vmStatusChanged', function(evt) {
+        console.log('Received vmStatusChanged event:', evt.detail);
+        const vmId = evt.detail.id;
+        const delay = evt.detail.delay || 6000;
+        
+        // Show loading state
+        const statusDiv = document.getElementById(`vm-status-${vmId}`);
+        if (statusDiv) {
+        // Define HTML template in frontend
+        statusDiv.innerHTML = `
+            <div class="w-2 h-2 bg-yellow-500 rounded-full shrink-0"></div>
+            <div class="flex gap-2 shrink-0 ml-2">
+            <span class="text-gray-500">In progress...</span>
+            </div>
+        `;
+        
+        // Trigger status refresh after delay
+        setTimeout(function() {
+            window.location.reload();
+        }, delay);
+        }
+    });
+
+    function deleteAssignment(id) {
+        if (confirm('Are you sure you want to delete this assignment?')) {
+            fetch(`/admin/labs/assign/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id })
+            }).then(response => response.json())
+                .then(response => {
+                    console.log(response);
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.href = `/admin/vms/clonedvms-group`;
+                    } else {
+                        alert('Failed to delete, please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    }
+
+    function batchPowerOff() {
+        if (confirm('Are you sure you want to power off all virtual machines?')) {
+            let vm_ids = [];
+            document.querySelectorAll('.vm_id_mark').forEach(element => {
+                vm_ids.push(element.textContent.trim());
+            });
+            console.log(vm_ids);
+            fetch('/admin/vms/tasks/batchpoweroff', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ vm_ids })
+            }).then(response => response.json())
+                .then(response => {
+                    console.log(response);
+                    if (response.success) {
+                        alert(response.message);
+                    } else {
+                        alert('Failed to batch power off, please try again.');
+                    }
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    }
+</script>

@@ -1,0 +1,171 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Virtual Machine Management</h1>
+    <p class="text-sm text-gray-700">Query virtual machines by user.</p>
+</div>
+
+<form id="filter-form" class="my-4 p-4 bg-white rounded flex flex-col gap-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col pb-4">
+            <label for="group_id" class="block text-sm font-medium text-gray-700">Group</label>
+            <select id="group_id" name="group_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a group</option>
+                <% groups.forEach((group)=> { %>
+                    <option value="<%= group.id %>"><%= group.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex flex-col pb-4">
+            <label for="user_id" class="block text-sm font-medium text-gray-700">User</label>
+            <select id="user_id" name="user_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a user</option>
+            </select>
+        </div>
+    </div>
+</form>
+
+<% if (userId) { %>
+    <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    No.
+                </th>
+
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    VM Name
+                </th>
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    Email
+                </th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    VM ID
+                </th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    Source ID
+                </th>
+                <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    Operation
+                </th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            <% clonedVms.forEach((clonedVm, index)=> { %>
+                <tr>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= index + 1 %>
+                    </td>
+
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= clonedVm.name %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= clonedVm.email %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= clonedVm.vm_id %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= clonedVm.source_vm_id %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <div class="flex items-center gap-2" id="vm-status-<%= clonedVm.vm_id %>" 
+                            hx-get="/admin/vmadmin/<%= clonedVm.vm_id %>" 
+                            hx-trigger="load, every 60s"
+                            hx-swap="innerHTML">
+                            <!-- Automatically filled by HTMX -->
+                        </div>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+    
+    <!-- If there is no virtual machine data, display a prompt -->
+    <% if (clonedVms.length === 0) { %>
+        <div class="text-center py-8">
+            <p class="text-gray-500">The user has no virtual machine data</p>
+        </div>
+    <% } %>
+<% } else { %>
+    <div class="mt-10 text-center p-10 bg-white rounded-lg border border-gray-200">
+        <div class="text-gray-500 text-lg mb-2">Please select a filter method first</div>
+        <p class="text-gray-400 text-sm">Please select a group and user in the drop-down menu above to view the virtual machine list</p>
+    </div>
+<% } %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const groupSelect = document.getElementById('group_id');
+        const userSelect = document.getElementById('user_id');
+        const filterForm = document.getElementById('filter-form');
+        
+        // Listen for group selection changes
+        groupSelect.addEventListener('change', async function() {
+            const groupId = this.value;
+            
+            // Reset user selection
+            userSelect.innerHTML = '<option value="">Please select a user</option>';
+            
+            if (!groupId) return;
+            
+            try {
+                // Get the user list of the group
+                const response = await fetch(`/admin/groups/${groupId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to get user list');
+                }
+                const users = await response.json();
+                
+                // Fill the user selector
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.name || user.username;
+                    userSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to get user list:', error);
+                alert('Failed to get user list, please try again later.');
+            }
+        });
+        
+        // Listen for user selection changes
+        userSelect.addEventListener('change', async function() {
+            const userId = this.value;
+            
+            if (!userId) return;
+            
+            try {
+                // Refresh the page, send the filter request with the userId
+                window.location.href = `/admin/vms/clonedvms?userId=${userId}`;
+            } catch (error) {
+                console.error('Failed to get cloned virtual machine list:', error);
+                alert('Failed to get cloned virtual machine list, please try again later.');
+            }
+        });
+    });
+    
+    // Listen for virtual machine status change events
+    document.body.addEventListener('vmStatusChanged', function(evt) {
+        console.log('Received vmStatusChanged event:', evt.detail);
+        const vmId = evt.detail.id;
+        const delay = evt.detail.delay || 6000;
+        
+        // Show loading state
+        const statusDiv = document.getElementById(`vm-status-${vmId}`);
+        if (statusDiv) {
+        // Define HTML template in frontend
+        statusDiv.innerHTML = `
+            <div class="w-2 h-2 bg-yellow-500 rounded-full shrink-0"></div>
+            <div class="flex gap-2 shrink-0 ml-2">
+            <span class="text-gray-500">In progress...</span>
+            </div>
+        `;
+        
+        // Trigger status refresh after delay
+        setTimeout(function() {
+            window.location.reload();
+        }, delay);
+        }
+    });
+</script>

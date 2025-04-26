@@ -1,0 +1,83 @@
+<div class="mx-auto max-w-7xl min-w-5xl px-4">
+    <div class="bg-white rounded-md p-4">
+        <div class="mb-4">
+            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back
+            </a>
+        </div>
+        
+        <div class="rounded-md flex gap-4 justify-between items-start">
+            <div>
+                <h3 class="text-base/7 font-semibold text-gray-900">
+                    <%= lab.title %>
+                </h3>
+                <p class="mt-1 text-sm/6 text-gray-500">
+                    <%= lab.description %>
+                </p>
+            </div>
+        </div>
+        <div class="mt-6">
+            <dl class="divide-y divide-gray-200">
+                <div class="py-3 grid grid-cols-4 gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Documentation</dt>
+                    <dd class="text-sm text-gray-700 col-span-3">
+                        <a href="<%= lab.link %>" class="text-sm text-indigo-600 hover:text-indigo-500">User Guide</a>
+                    </dd>
+                </div>
+                <div class="py-3 grid grid-cols-4 gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Category</dt>
+                    <dd class="text-sm text-gray-700 col-span-3"><%= lab.category_name %></dd>
+                </div>
+                <div class="py-3 grid grid-cols-4 gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Virtual Machine List</dt>
+                    <dd class="text-sm text-gray-900 col-span-3">
+                        <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
+                            <% vmList.forEach(vm => { %>
+                            <li class="flex items-center justify-between py-4 px-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="shrink-0 font-medium"><%= vm.name %></span>
+                                    <span class="shrink-0 text-gray-400"><%= vm.vm_id %></span>
+                                </div>
+                                <div class="flex items-center gap-2" id="vm-status-<%= vm.vm_id %>" 
+                                    hx-get="/vm/<%= vm.vm_id %>/power" 
+                                    hx-trigger="load, every 300s"
+                                    hx-swap="innerHTML">
+                                    <!-- Automatically filled by HTMX -->
+                                </div>
+                            </li>
+                            <% }) %>
+                        </ul>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.body.addEventListener('vmStatusChanged', function(evt) {
+    console.log('Received vmStatusChanged event:', evt.detail);
+    const vmId = evt.detail.id;
+    const delay = evt.detail.delay || 6000;
+    
+    // Show loading state
+    const statusDiv = document.getElementById(`vm-status-${vmId}`);
+    if (statusDiv) {
+      // Define HTML template in frontend
+      statusDiv.innerHTML = `
+        <div class="w-2 h-2 bg-yellow-500 rounded-full shrink-0"></div>
+        <div class="flex gap-2 shrink-0 ml-2">
+          <span class="text-gray-500">Operation in progress...</span>
+        </div>
+      `;
+      
+      // Trigger status refresh after delay
+      setTimeout(function() {
+        window.location.reload();
+      }, delay);
+    }
+  });
+</script>

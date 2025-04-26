@@ -1,0 +1,16 @@
+export VCENTER_BASE_URL="https://10.1.1.1"
+export VCENTER_USERNAME="administrator@vsphere.local"
+export VCENTER_PASSWORD="123456"
+
+export DB_HOST="10.1.1.2"
+export DB_USER="admin"
+export DB_PASSWORD="123456"
+export DB_PORT=5432
+export DB_NAME="vlab"
+
+export SESSION_SECRET="123456"
+export PROXY_HOST="localhost:8843"
+
+export REDIS_HOST="10.1.1.2"
+export REDIS_PORT=6379
+export REDIS_PASSWORD="123456"

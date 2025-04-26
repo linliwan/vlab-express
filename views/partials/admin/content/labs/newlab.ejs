@@ -1,0 +1,143 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900"><%= isEdit ? 'Edit Lab' : 'New Lab' %></h1>
+    <p class="text-sm text-gray-700"><%= isEdit ? 'Edit existing lab' : 'Create a new lab' %>.</p>
+</div>
+
+<form class="flex flex-col gap-4 mt-4 p-4 bg-white rounded" id="createLabForm">
+    <% if (isEdit) { %>
+        <input type="hidden" name="id" value="<%= lab.id %>">
+    <% } %>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+            <label for="labTitle" class="block text-sm font-medium text-gray-700">Title</label>
+            <input type="text" id="labTitle" name="title" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Please enter the title" required value="<%= lab ? lab.title : '' %>">
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="labCategory" class="block text-sm font-medium text-gray-700">Category</label>
+            <select id="labCategory" name="category" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a category</option>
+                <% categories.forEach(category => { %>
+                    <option value="<%= category.id %>" <%= lab && lab.category_id == category.id ? 'selected' : '' %>><%= category.name %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="labLink" class="block text-sm font-medium text-gray-700">Link</label>
+            <input type="text" id="labLink" name="link" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Please enter the document link" required value="<%= lab ? lab.link : '' %>">  
+        </div>
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="labDescription" class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea id="labDescription" name="description" class="h-30 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Please enter the description" required><%= lab ? lab.description : '' %></textarea>
+    </div>
+    <div class="flex flex-col gap-2">
+        <label for="vms" class="block text-sm font-medium text-gray-700">Template VM</label>
+        <div class="relative">
+            <select id="vms" name="vms" multiple>
+                <% vms.forEach(vm => { %>
+                    <option value="<%= vm.vm %>" <%= selectedVms && selectedVms.includes(vm.vm) ? 'selected' : '' %>><%= vm.name %></option>
+                <% }); %>
+            </select>
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <button type="submit" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">
+            <%= isEdit ? 'Save Changes' : 'New Lab' %>
+        </button>
+    </div>
+</form>
+
+
+<script>
+    // 初始化 Choices.js
+    const initMultiSelect = (selector, options = {}) => {
+        return new Choices(selector, {
+            removeItemButton: true,
+            searchEnabled: true,
+            searchPlaceholderValue: 'Search for template VMs...',
+            noResultsText: 'No matching items found',
+            noChoicesText: 'No choices available',
+            itemSelectText: '',
+            position: 'bottom',
+            placeholder: true,
+            placeholderValue: 'VM',
+            classNames: {
+                containerOuter: 'choices',
+                containerInner: 'choices__inner',
+                input: 'choices__input',
+                inputCloned: 'choices__input--cloned',
+                list: 'choices__list',
+                listItems: 'choices__list--multiple',
+                listSingle: 'choices__list--single',
+                listDropdown: 'choices__list--dropdown',
+                item: 'choices__item',
+                itemSelectable: 'choices__item--selectable',
+                itemDisabled: 'choices__item--disabled',
+                itemChoice: 'choices__item--choice',
+                placeholder: 'choices__placeholder',
+                group: 'choices__group',
+                groupHeading: 'choices__heading',
+                button: 'choices__button'
+            },
+            ...options,
+        });
+    };
+
+    // Form submission logic
+    const handleFormSubmit = async (event, multiSelect) => {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const isEdit = formData.has('id');
+
+        const data = Object.fromEntries(formData.entries());
+        data.vms = multiSelect.getValue().map(item => item.value);
+
+        try {
+            let url = '/admin/labs/newlab';
+            let method = 'POST';
+            
+            if (isEdit) {
+                url = `/admin/labs/${data.id}`;
+                method = 'PUT';
+            }
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+                // If it is in edit mode, return to the list page after success
+                if (isEdit) {
+                    window.location.href = '/admin/labs';
+                } else {
+                    form.reset();
+                    multiSelect.clearStore();   // Reset the multi-select box
+                    document.getElementById('labTitle').focus();  // Focus on the first input box
+                }
+            } else {
+                alert(result.message || 'Operation failed, please try again');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Operation failed, please try again');
+        }
+    };
+
+    // Main page logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('createLabForm');
+        const multiSelect = initMultiSelect('#vms');
+
+        form.addEventListener('submit', event => handleFormSubmit(event, multiSelect));
+    });
+</script>
+
+

@@ -1,0 +1,185 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Lab Assignment</h1>
+    <p class="text-sm text-gray-700">
+        Assignment: Clone a virtual machine from the LAB for each user in the group, and create a database record; <br />
+        Tag: Tag the virtual machine in vCenter with the group tag for easy tracking and management.
+
+    </p>
+</div>
+
+<form id="assign-form" class="my-4 p-4 bg-white rounded">
+    <div class="grid grid-cols-3 gap-4">
+        <div class="flex flex-col pb-4">
+            <label for="lab_id" class="block text-sm font-medium text-gray-700">Lab Name</label>
+            <select id="lab_id" name="lab_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a lab</option>
+                <% labs.forEach((lab)=> { %>
+                    <option value="<%= lab.id %>"><%= lab.title %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex flex-col pb-4">
+            <label for="group_id" class="block text-sm font-medium text-gray-700">Group Name</label>
+            <select id="group_id" name="group_id" class="h-10 px-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="">Please select a group</option>
+                <% groups.forEach((group)=> { %>
+                    <option value="<%= group.id %>"><%= group.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        <div class="flex justify-end items-center">
+            <button type="submit" class="h-8 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium cursor-pointer">
+                Assign
+            </button>
+        </div>
+    </div>
+</form>
+
+<table class="min-w-full divide-y divide-gray-300">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">No.</th>
+            <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                <div class="mt-1">
+                    <select id="filter_lab" class="w-full h-8 px-2 text-xs border-gray-300 rounded shadow-sm bg-white">
+                        <option value="">Lab - All</option>
+                        <% labs.forEach((lab)=> { %>
+                            <option value="<%= lab.id %>"><%= lab.title %></option>
+                        <% }); %>
+                    </select>
+                </div>
+            </th>
+            <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                <div class="mt-1">
+                    <select id="filter_group" class="w-full h-8 px-2 text-xs border-gray-300 rounded shadow-sm bg-white">
+                        <option value="">Group - All</option>
+                        <% groups.forEach((group)=> { %>
+                            <option value="<%= group.id %>"><%= group.name %></option>
+                        <% }); %>
+                    </select>
+                </div>
+            </th>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">Operation</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 bg-white" id="assignments-table">
+        <% assignments.forEach((assignment, index)=> { %>   
+            <tr class="assignment-row" data-lab-id="<%= assignment.lab_id %>" data-group-id="<%= assignment.group_id %>">
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= index + 1 %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= assignment.lab_title %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= assignment.group_name %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <button onclick="tagVm('<%= assignment.id %>')" class="mr-4 text-green-600 hover:text-green-400 text-sm font-medium cursor-pointer">
+                        Tag
+                    </button>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>
+
+<script>
+    document.getElementById('assign-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        const lab_id = formData.get('lab_id');
+        const group_id = formData.get('group_id');
+        if (!lab_id || !group_id) {
+            alert('Please select a lab and a group');
+            return;
+        }
+        const formDataObj = {lab_id: lab_id, group_id: group_id};
+
+        fetch('/admin/labs/assign', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formDataObj)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload(); // Refresh the page to display the new assignment
+            } else {
+                alert('Failed to assign: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to assign: ' + error.message);
+        });
+    });
+
+
+
+    function tagVm(id) {
+        fetch(`/admin/labs/assign/tag`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Filtering functionality implementation
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterLab = document.getElementById('filter_lab');
+        const filterGroup = document.getElementById('filter_group');
+        const rows = document.querySelectorAll('.assignment-row');
+
+        // Apply filters
+        function applyFilters() {
+            const labFilter = filterLab.value;
+            const groupFilter = filterGroup.value;
+            
+            rows.forEach(row => {
+                const labId = row.getAttribute('data-lab-id');
+                const groupId = row.getAttribute('data-group-id');
+                
+                // Check if all filters are satisfied
+                const labMatch = !labFilter || labId === labFilter;
+                const groupMatch = !groupFilter || groupId === groupFilter;
+                
+                // Only display the row if both conditions are met
+                if (labMatch && groupMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update row numbers
+            updateRowNumbers();
+        }
+        
+        // Update row numbers
+        function updateRowNumbers() {
+            let visibleIndex = 1;
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    row.querySelector('td').textContent = visibleIndex++;
+                }
+            });
+        }
+        
+        // Bind event listeners
+        filterLab.addEventListener('change', applyFilters);
+        filterGroup.addEventListener('change', applyFilters);
+    });
+</script>

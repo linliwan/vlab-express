@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body>
+    <div class="flex flex-col min-h-screen bg-[url('/images/404.avif')] bg-cover bg-center bg-no-repeat">
+        <div class="flex-grow flex items-center justify-center py-12">
+            <div class="max-w-md w-full space-y-8 p-10 bg-white opacity-70 backdrop-filter backdrop-blur-md rounded-xl shadow-md">
+                <div class="text-center">
+                    <h1 class="text-9xl font-bold text-gray-800">404</h1>
+                    <h2 class="text-2xl font-bold text-gray-600 mt-8"><%= message %></h2>
+                    <p class="text-gray-500 mt-2">Sorry, we couldn't find the page you requested.</p>
+                    
+                    <div class="mt-6">
+                        <a href="/" class="inline-block px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<div class="mx-auto max-w-7xl min-w-5xl px-4">
+    <div class="bg-white rounded-md p-4">
+        <div class="mb-4">
+            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back
+            </a>
+        </div>
+        
+        <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    No.
+                </th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    VM ID
+                </th>
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    Lab Name
+                </th>
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    VM Name
+                </th>
+                <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            <% vms.forEach((vm, index)=> { %>
+                <tr>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= index + 1 %>
+                    </td>
+
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= vm.vm_id %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= vm.title %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= vm.name %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <div class="flex items-center gap-2" id="vm-status-<%= vm.vm_id %>" 
+                            hx-get="/vm/<%= vm.vm_id %>/power" 
+                            hx-trigger="load, every 300s"
+                            hx-swap="innerHTML">
+                            <!-- Automatically filled by HTMX -->
+                        </div>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<script>
+    document.body.addEventListener('vmStatusChanged', function(evt) {
+    console.log('Received vmStatusChanged event:', evt.detail);
+    const vmId = evt.detail.id;
+    const delay = evt.detail.delay || 6000;
+    
+    // Show loading state
+    const statusDiv = document.getElementById(`vm-status-${vmId}`);
+    if (statusDiv) {
+      // Define HTML template in frontend
+      statusDiv.innerHTML = `
+        <div class="w-2 h-2 bg-yellow-500 rounded-full shrink-0"></div>
+        <div class="flex gap-2 shrink-0 ml-2">
+          <span class="text-gray-500">In progress...</span>
+        </div>
+      `;
+      
+      // Trigger status refresh after delay
+      setTimeout(function() {
+        window.location.reload();
+      }, delay);
+    }
+  });
+</script>

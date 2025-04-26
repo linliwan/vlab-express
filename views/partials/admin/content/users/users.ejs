@@ -1,0 +1,167 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">User Management</h1>
+    <p class="text-sm text-gray-700">System user list, including username, email and role information.</p>
+</div>
+
+<!-- 组选择器 - 移到表格外部 -->
+<div class="flex items-center gap-4 mt-4 mb-6 p-4 bg-white rounded-lg border border-gray-200">
+    <label for="groupFilter" class="text-sm font-medium text-gray-700">Group:</label>
+    <select id="groupFilter" onchange="window.location.href='/admin/users?groupid=' + this.value"
+        class="block w-64 px-3 py-2 text-gray-900 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+        <option value="">-- Please select a group --</option>
+        <% groups.forEach((group) => { %>
+            <option value="<%= group.id %>" <%= parseInt(groupid) === group.id ? 'selected' : '' %>>
+                <%= group.name %>
+            </option>
+        <% }); %>
+    </select>
+</div>
+
+<% if (groupid) { %>
+    <!-- Batch operation toolbar -->
+    <div class="flex items-center gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+        <button onclick="batchDelete()"
+            class="h-8 px-4 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium cursor-pointer">
+            Batch delete
+        </button>
+        <button onclick="batchResetPassword()"
+            class="h-8 px-4 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-medium cursor-pointer">
+            Reset password
+        </button>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    No.
+                </th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                    <input type="checkbox" id="selectAll" onchange="selectAllUsers()">
+                </th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">UID</th>
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">Username</th>
+                <th scope="col" class="w-4/12 p-3 text-left text-sm font-semibold text-gray-900">Email</th>
+                <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">Role</th>
+                <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">Group</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            <% users.forEach((user, index) => { %>
+                <tr>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= index + 1 %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <input type="checkbox" class="user-checkbox" data-id="<%= user.id %>">
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= user.id %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                        <%= user.username %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm text-gray-500">
+                        <%= user.email %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm text-gray-500">
+                        <%= user.role_name %>
+                    </td>
+                    <td class="whitespace-nowrap p-3 text-sm text-gray-500">
+                        <%= user.group_name %>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+<% } else { %>
+    <!-- 未选择组时显示的提示信息 -->
+    <div class="mt-10 text-center p-10 bg-white rounded-lg border border-gray-200">
+        <div class="text-gray-500 text-lg mb-2">Please select a group to view the user list</div>
+        <p class="text-gray-400 text-sm">Select a group above to view the user list of that group</p>
+    </div>
+<% } %>
+
+<script>
+    function selectAllUsers() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.getElementsByClassName('user-checkbox');
+        for (let checkbox of checkboxes) {
+            checkbox.checked = selectAll.checked;
+        }
+    }
+
+    function getSelectedUserIds() {
+        const checkboxes = document.getElementsByClassName('user-checkbox');
+        const selectedIds = [];
+        for (let checkbox of checkboxes) {
+            if (checkbox.checked) {
+                selectedIds.push(checkbox.getAttribute('data-id'));
+            }
+        }
+        return selectedIds;
+    }
+
+    function batchDelete() {
+        const selectedIds = getSelectedUserIds();
+        if (selectedIds.length === 0) {
+            alert('Please select the user to delete');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to delete the selected ${selectedIds.length} users?`)) {
+            fetch('/admin/users', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userIds: selectedIds })
+            }).then(response => response.json())
+                .then(response => {
+                    console.log(response);
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete, please try again');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete, please try again');
+                });
+        }
+    }
+
+    function batchResetPassword() {
+        const selectedIds = getSelectedUserIds();
+        if (selectedIds.length === 0) {
+            alert('Please select the user to reset password');
+            return;
+        }
+        const newPassword = prompt('Please enter a new password (all selected users will use the same password):');
+        if (!newPassword) return;
+
+        fetch('/admin/users/password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userIds: selectedIds,
+                password: newPassword
+            })
+        }).then(response => response.json())
+            .then(response => {
+                console.log(response);
+                if (response.success) {
+                    alert(response.message);
+                    window.location.reload();
+                } else {
+                    alert('Failed to reset password, please try again');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Failed to reset password, please try again');
+            });
+    }
+</script>

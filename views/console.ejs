@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VM Console</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" type="text/css" href="/vmware/css/wmks-all.css" />
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.8.16/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/vmware/wmks.min.js"></script>
+</head>
+<body class="m-0 p-0 w-full h-full overflow-hidden font-sans">
+    <header class="bg-gray-800">
+        <div class="mx-auto container">
+            <div class="relative flex h-16 items-center justify-between">
+                <div class="flex items-center justify-start">
+                    <div class="flex shrink-0 items-center">
+                        <img class="h-8 w-auto" src="/images/logo.png" alt="logo">
+                    </div>
+                </div>
+    
+                <div class="flex items-center">
+                    <button id="send-cad" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Ctrl+Alt+Del</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="wmksContainer" class="absolute top-16 left-0 right-0 bottom-0 bg-gray-400"></div>
+    <script>
+        const ticket = '<%= ticket %>';
+        let wmks;
+        
+        if (ticket) {
+            wmks = WMKS.createWMKS("wmksContainer", {})
+                .register(WMKS.CONST.Events.CONNECTION_STATE_CHANGE, function(event, data) {
+                    if (data.state == WMKS.CONST.ConnectionState.CONNECTED) {
+                        console.log("Connection status changed: Connected");
+                    } else if (data.state == WMKS.CONST.ConnectionState.DISCONNECTED) {
+                        console.log("Connection status changed: Disconnected");
+                    }
+                });
+            
+            wmks.connect(ticket);
+            
+            // send Ctrl+Alt+Del
+            document.getElementById('send-cad').addEventListener('click', function() {
+                wmks.sendCAD();
+            });
+        } else {
+            document.getElementById('wmksContainer').innerHTML = '<div class="p-5 text-red-500">Unable to get console credentials. Please contact system administrator.</div>';
+        }
+    </script>
+</body>
+</html>

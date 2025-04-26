@@ -1,0 +1,53 @@
+flowchart LR
+%% 美化配置
+classDef userStyle fill:#f9f,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+classDef frontStyle fill:#9cf,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+classDef appStyle fill:#cfc,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+classDef dataStyle fill:#fc9,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+classDef infraStyle fill:#cff,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+classDef serverStyle fill:#eee,stroke:#333,stroke-width:1px,rx:10px,ry:10px;
+
+%% 子图
+subgraph s1["User Side"]
+    User1("Teachers/Administrators")
+    User2("Students")
+end
+subgraph s2["Front End"]
+    WebUI["Web界面 EJS/HTML"]
+end
+subgraph s5["Virtualization"]
+    vCenter["VMware vCenter"]
+    ESXi["ESXi Host"]
+end
+subgraph s3["App"]
+    Express["Express.js App"]
+    RProxy["Reverse Proxy rproxy.js/nginx"]
+end
+subgraph s4["Data Layer"]
+    Redis["Redis Session/Cache"]
+    PG["PostgreSQL Main Database"]
+end
+
+%% 连接线
+User1 -- Web Access --> WebUI
+User2 -- Web Access --> WebUI
+WebUI -- HTTP/HTTPS --> Express
+Express -- API --> PG
+Express -- Session --> Redis
+Express -- vSphere API --> vCenter
+vCenter -- Management --> ESXi
+Express -- WebSocket/HTTP --> RProxy
+RProxy -- Proxy --> Express
+RProxy -- WebSocket Proxy --> ESXi
+RProxy -- Static Resource --> Express
+RProxy -- Reverse Proxy --> Express
+
+s5 --- s3
+s4 --- s3
+
+%% 应用样式
+class User1,User2 userStyle;
+class WebUI frontStyle;
+class Express,RProxy appStyle;
+class Redis,PG dataStyle;
+class vCenter,ESXi infraStyle;

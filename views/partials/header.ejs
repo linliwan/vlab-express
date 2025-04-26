@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLAB Laboratory</title>
+    <link rel="stylesheet" href="/css/choices.min.css" />
+    <link rel="stylesheet" href="/css/output.css">
+    <script src="/javascript/htmx.min.js"></script>
+</head>
+<body>
+    <div class="flex flex-col min-h-screen">
+        <header class="bg-gray-800">
+            <div class="mx-auto max-w-7xl min-w-5xl px-8">
+                <div class="relative flex h-16 items-center justify-between">
+                    <div class="flex items-center justify-start">
+                        <div class="flex shrink-0 items-center">
+                            <img class="h-8 w-auto" src="/images/logo.png" alt="logo">
+                        </div>
+                        <% if (locals.authUser) { %>
+                            <div class="flex gap-4 ml-4 pr-12">
+                                <a href="/" class="rounded-md px-3 py-2 text-sm font-medium <%= !locals.category && locals.currentPage === 'home' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">Home</a>
+                                <% categories.forEach(item => { %>
+                                    <a href="/vlab/?category=<%= item.id %>" class="rounded-md px-3 py-2 text-sm font-medium <%= locals.category === item.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>"><%= item.name %></a>
+                                <% }) %>
+                                <a href="/vlab/listvms" class="rounded-md px-3 py-2 text-sm font-medium <%= locals.currentPage === 'listvms' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">My Virtual Machines</a>
+                                <% if (locals.authUser.role_id === 1 || locals.authUser.role_id === 2) { %>
+                                    <a href="/admin" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Admin Panel</a>
+                                <% } %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="flex items-center">
+                        <% if (locals.authUser) { %>
+                            <a href="/auth/profile" class="rounded-md px-3 py-2 text-sm font-sm text-gray-300 hover:bg-gray-700 hover:text-white">
+                                <div class="flex items-center">
+                                    <img src="/images/account_circle.svg" alt="User Avatar" class="w-6 h-6 text-gray-300 mr-2">
+                                    <span><%= locals.authUser.username %></span>
+                                </div>
+                            </a>
+                            <a href="/auth/logout" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Logout</a>
+                        <% } else { %>
+                            <a href="/auth/login" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Login</a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="bg-gray-100 py-8 flex-grow-1">

@@ -1,0 +1,43 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Resource Overview</h1>
+    <p class="text-sm text-gray-700">vCenter host resource information.</p>
+</div>
+
+<table class="min-w-full divide-y divide-gray-300">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                No.
+            </th>
+            <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Name
+            </th>
+            <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Connection State
+            </th>
+            <th scope="col" class="w-5/12 p-3 text-left text-sm font-semibold text-gray-900">Power State</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 bg-white">
+        <% hosts.forEach((host, index) => { %>
+            <tr>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= index + 1 %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= host.name %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= host.connection_state %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <% if (host.power_state === 'POWERED_ON') { %>
+                        <div class="h-4 w-4 bg-green-500 rounded-full"></div>
+                    <% } else { %>
+                        <div class="h-4 w-4 bg-red-500 rounded-full"></div>
+                    <% } %>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

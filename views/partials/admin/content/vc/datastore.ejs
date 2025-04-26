@@ -1,0 +1,51 @@
+<div class="flex flex-col pb-4">
+    <h1 class="text-xl font-semibold text-gray-900">Resource Overview</h1>
+    <p class="text-sm text-gray-700">vCenter datastore resource information.</p>
+</div>
+
+<table class="min-w-full divide-y divide-gray-300">
+    <thead class="bg-gray-50">
+        <tr>
+            <th scope="col" class="w-1/12 p-3 text-left text-sm font-semibold text-gray-900">
+                No.
+            </th>
+            <th scope="col" class="w-3/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Name
+            </th>
+            <th scope="col" class="w-2/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Type
+            </th>
+            <th scope="col" class="w-5/12 p-3 text-left text-sm font-semibold text-gray-900">
+                Usage
+            </th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 bg-white">
+        <% datastores.forEach((datastore, index) => { 
+            const freeSpaceGB = (datastore.free_space / (1024 * 1024 * 1024)).toFixed(2);
+            const capacityGB = (datastore.capacity / (1024 * 1024 * 1024)).toFixed(2);
+            const usedSpaceGB = (capacityGB - freeSpaceGB).toFixed(2);
+            const usagePercentage = ((usedSpaceGB / capacityGB) * 100).toFixed(1);
+        %>
+            <tr>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= index + 1 %>    
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= datastore.name %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <%= datastore.type %>
+                </td>
+                <td class="whitespace-nowrap p-3 text-sm font-medium text-gray-900">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: <%= usagePercentage %>%"></div>
+                    </div>
+                    <span class="text-xs text-gray-500"><%= usagePercentage %>% used</span>
+                    <span class="text-xs text-gray-500">, total capacity <%= capacityGB %> GB</span>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>
+

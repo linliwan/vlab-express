@@ -16,7 +16,7 @@ VLAB is a virtualization lab management system built with Express.js, designed t
 
 VLAB adopts a multi-layer architecture:
 
-1. **Frontend**: Web interface rendered by EJS templates
+1. **Frontend**: Web interface rendered by EJS templates and tailwindcss
 2. **Application Layer**: Node.js Express server
 3. **Cache Layer**: Redis for session storage and caching
 4. **Storage Layer**: PostgreSQL database
@@ -30,9 +30,9 @@ VLAB adopts a multi-layer architecture:
 ### Prerequisites
 
 - Node.js 16+
-- Redis 6+
+- Redis 7+
 - PostgreSQL 12+
-- Docker (optional)
+- Tailwindcss 4+
 - VMware vCenter server 7.0+
 
 ### Environment Variable Configuration
@@ -165,6 +165,7 @@ To add new features, follow these steps:
 2. Add necessary views to the `views/` directory
 3. Update config files to support new features
 4. Rebuild the frontend with React/Vue for a more modern UI
+5. Adapting CSS for mobile devices
 
 ## Performance Optimization
 
